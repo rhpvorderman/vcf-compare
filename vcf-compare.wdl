@@ -81,6 +81,7 @@ workflow VcfCompare {
         Array[File] sharedVcf1Index = intersect.sharedAVcfIndex
         Array[File] sharedVcf2 = intersect.sharedBVcf
         Array[File] sharedVcf2Index = intersect.sharedBVcfIndex
+        Array[File] bcftoolsIsecReadmes = intersect.readme
     }
 }
 
