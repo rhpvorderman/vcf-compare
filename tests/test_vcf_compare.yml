@@ -6,3 +6,12 @@
     -v
     -d test-output/.
     vcf-compare.wdl
+  files:
+    - path: test-output/out/wgs2/0000.vcf.gz
+    - path: test-output/out/wgs2/0001.vcf.gz
+    - path: test-output/out/wgs2/0002.vcf.gz
+    - path: test-output/out/wgs2/0003.vcf.gz
+    - path: test-output/out/wgs2/0000.vcf.gz.tbi
+    - path: test-output/out/wgs2/0001.vcf.gz.tbi
+    - path: test-output/out/wgs2/0002.vcf.gz.tbi
+    - path: test-output/out/wgs2/0003.vcf.gz.tbi

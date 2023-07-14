@@ -77,6 +77,10 @@ workflow VcfCompare {
         Array[File] privateVcf1Index = intersect.privateAVcfIndex
         Array[File] privateVcf2 = intersect.privateBVcf
         Array[File] privateVcf2Index = intersect.privateBVcfIndex
+        Array[File] sharedVcf1 = intersect.sharedAVcf
+        Array[File] sharedVcf1Index = intersect.sharedAVcfIndex
+        Array[File] sharedVcf2 = intersect.sharedBVcf
+        Array[File] sharedVcf2Index = intersect.sharedBVcfIndex
     }
 }
 
