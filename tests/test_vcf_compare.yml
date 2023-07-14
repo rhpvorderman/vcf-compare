@@ -1,0 +1,3 @@
+- name: vcf compare
+  command: miniwdl run vcf-compare.wdl --input tests/integration/vcf_compare.json -v
+
