@@ -8,5 +8,10 @@
       "name1": "wgs1",
       "name2": "wgs2"
     }
+  ],
+  "VcfCompare.snpEffGenomeVersion": "testref1",
+  "VcfCompare.snpEffDatadirZip": "tests/data/testref1.zip",
+  "VcfCompare.snpEffConfigOptions": [
+      "testref1.genome=Test"
   ]
 }

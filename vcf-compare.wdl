@@ -38,6 +38,7 @@ workflow VcfCompare {
         String outputDir = "."
         String snpEffGenomeVersion
         File snpEffDatadirZip
+        Array[String] snpEffConfigOptions = []
     }
 
     scatter (unit in units) {
@@ -93,6 +94,7 @@ workflow VcfCompare {
                 genomeVersion = snpEffGenomeVersion,
                 datadirZip = snpEffDatadirZip,
                 outputPath = prefix + "/" + name1 + ".annotated.vcf",
+                configOptions = snpEffConfigOptions,
         }
 
         call snpeff.SnpEff as annotateUnique2 {
@@ -102,6 +104,7 @@ workflow VcfCompare {
                 genomeVersion = snpEffGenomeVersion,
                 datadirZip = snpEffDatadirZip,
                 outputPath = prefix + "/" + name2 + ".annotated.vcf",
+                configOptions = snpEffConfigOptions,
         }
     }
 
