@@ -17,3 +17,5 @@
     - path: test-output/out/wgs2/0003.vcf.gz.tbi
     - path: test-output/out/wgs2/README.txt
     - path: test-output/out/wgs2/venn.txt
+    - path: test-output/out/wgs2/wgs1.annotated.vcf
+    - path: test-output/out/wgs2/wgs2.annotated.vcf
