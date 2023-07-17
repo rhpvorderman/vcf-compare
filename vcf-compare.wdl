@@ -27,7 +27,8 @@ struct CompareUnit {
     File vcf1index
     File vcf2
     File vcf2index
-
+    String? name1
+    String? name2
 }
 
 workflow VcfCompare {
@@ -41,25 +42,26 @@ workflow VcfCompare {
             input:
                 vcf = unit.vcf1 
         }
-        String prefix1 = outputDir + "/" + retrieveSample1Id.samples[0]
+        String prefix = outputDir + "/" + retrieveSample1Id.samples[0]
+        String name1 = select_first([unit.name1, "1"])
+        String name2 = select_first([unit.name2, "2"])
 
         call retrieveSamplesFromVcf as retrieveSample2Id {
             input:
                 vcf = unit.vcf2
         }
-        String prefix2 = outputDir + "/" + retrieveSample2Id.samples[0]
 
         call bcftools.Norm as normalizeVcf1 {
             input:
                 inputVcf = unit.vcf1,
                 inputVcfIndex = unit.vcf1index,
-                outputPath = prefix1 + ".1.normalized.vcf.gz"
+                outputPath = prefix + "." + name1 + ".normalized.vcf.gz"
         }
         call bcftools.Norm as normalizeVcf2 {
             input:
                 inputVcf = unit.vcf2,
                 inputVcfIndex = unit.vcf2index,
-                outputPath = prefix2 + ".2.normalized.vcf.gz"
+                outputPath = prefix + "." + name2 + ".normalized.vcf.gz"
         }
 
         call bcftools.Isec as intersect {
@@ -68,7 +70,17 @@ workflow VcfCompare {
                 aVcfIndex = normalizeVcf1.outputVcfIndex,
                 bVcf = normalizeVcf2.outputVcf,
                 bVcfIndex = normalizeVcf2.outputVcfIndex,
-                prefix = prefix1 
+                prefix = prefix 
+        }
+        
+        call vennStats as vennStats {
+            input:
+                uniqueAVcf = intersect.privateAVcf,
+                uniqueBVcf = intersect.privateBVcf,
+                sharedVcf = intersect.sharedAVcf,
+                nameA = name1,
+                nameB = name2,
+                outputPath = prefix + "/venn.txt"
         }
     }
 
@@ -82,6 +94,7 @@ workflow VcfCompare {
         Array[File] sharedVcf2 = intersect.sharedBVcf
         Array[File] sharedVcf2Index = intersect.sharedBVcfIndex
         Array[File] bcftoolsIsecReadmes = intersect.readme
+        Array[File] vennFiles = vennStats.out
     }
 }
 
@@ -102,6 +115,44 @@ task retrieveSamplesFromVcf {
         docker: "quay.io/biocontainers/bcftools:1.16--hfe4b78e_1"
         # 10 minutes should be ample as only the header and the first line are processed.
         time_minutes: 10
+        memory: "512MiB"
+    }
+}
+
+
+task vennStats {
+    input {
+        File uniqueAVcf
+        File uniqueBVcf
+        File sharedVcf
+        String nameA = basename(uniqueAVcf)
+        String nameB = basename(uniqueBVcf)
+        String outputPath = "venn.txt"
+    }
+
+    command <<<
+        mkdir -p $(dirname '~{outputPath}')
+        ONE_UNIQUES=$(bcftools view --no-header ~{uniqueAVcf} | wc -l)
+        TWO_UNIQUES=$(bcftools view --no-header ~{uniqueBVcf} | wc -l)
+        SHARED_UNIQUES=$(bcftools view --no-header ~{sharedVcf} | wc -l)
+        echo "$ONE_UNIQUES" > one.txt
+        echo "$TWO_UNIQUES" > two.txt
+        echo "$SHARED_UNIQUES" > shared.txt
+        echo "~{nameA}: $ONE_UNIQUES" > ~{outputPath}
+        echo "~{nameB}: $TWO_UNIQUES" >> ~{outputPath}
+        echo "shared: $SHARED_UNIQUES" >> ~{outputPath} 
+    >>>
+    output {
+        Int uniqueA = read_int("one.txt")
+        Int uniqueB = read_int("two.txt")
+        Int shared = read_int("shared.txt")
+        File out = outputPath
+    }
+
+    runtime {
+        docker: "quay.io/biocontainers/bcftools:1.16--hfe4b78e_1"
+        # 10 minutes should be ample as only the header and the first line are processed.
+        time_minutes: 30
         memory: "512MiB"
     }
 }

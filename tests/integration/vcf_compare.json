@@ -4,7 +4,9 @@
       "vcf1":  "tests/data/wgs1.vcf.gz",
       "vcf1index":  "tests/data/wgs1.vcf.gz.tbi",
       "vcf2":  "tests/data/wgs2.vcf.gz",
-      "vcf2index":  "tests/data/wgs2.vcf.gz.tbi"
+      "vcf2index":  "tests/data/wgs2.vcf.gz.tbi",
+      "name1": "wgs1",
+      "name2": "wgs2"
     }
   ]
 }

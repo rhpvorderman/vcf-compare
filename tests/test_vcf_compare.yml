@@ -16,3 +16,4 @@
     - path: test-output/out/wgs2/0002.vcf.gz.tbi
     - path: test-output/out/wgs2/0003.vcf.gz.tbi
     - path: test-output/out/wgs2/README.txt
+    - path: test-output/out/wgs2/venn.txt
