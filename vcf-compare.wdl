@@ -42,30 +42,20 @@ workflow VcfCompare {
     }
 
     scatter (unit in units) {
-        call retrieveSamplesFromVcf as retrieveSample1Id {
-            input:
-                vcf = unit.vcf1 
-        }
-        String prefix = outputDir + "/" + retrieveSample1Id.samples[0]
         String name1 = select_first([unit.name1, "1"])
         String name2 = select_first([unit.name2, "2"])
-
-        call retrieveSamplesFromVcf as retrieveSample2Id {
-            input:
-                vcf = unit.vcf2
-        }
 
         call bcftools.Norm as normalizeVcf1 {
             input:
                 inputVcf = unit.vcf1,
                 inputVcfIndex = unit.vcf1index,
-                outputPath = prefix + "." + name1 + ".normalized.vcf.gz"
+                outputPath = outputDir + "/" + name1 + ".normalized.vcf.gz"
         }
         call bcftools.Norm as normalizeVcf2 {
             input:
                 inputVcf = unit.vcf2,
                 inputVcfIndex = unit.vcf2index,
-                outputPath = prefix + "." + name2 + ".normalized.vcf.gz"
+                outputPath = outputDir + "/" + name2 + ".normalized.vcf.gz"
         }
 
         call bcftools.Isec as intersect {
@@ -74,7 +64,7 @@ workflow VcfCompare {
                 aVcfIndex = normalizeVcf1.outputVcfIndex,
                 bVcf = normalizeVcf2.outputVcf,
                 bVcfIndex = normalizeVcf2.outputVcfIndex,
-                prefix = prefix 
+                prefix = outputDir + "/" + name1
         }
         
         call vennStats as vennStats {
@@ -84,7 +74,7 @@ workflow VcfCompare {
                 sharedVcf = intersect.sharedAVcf,
                 nameA = name1,
                 nameB = name2,
-                outputPath = prefix + "/venn.txt"
+                outputPath = outputDir + "/" + name1 + "." + "venn.txt"
         }
 
         call snpeff.SnpEff as annotateUnique1 {
@@ -93,7 +83,7 @@ workflow VcfCompare {
                 vcfIndex = intersect.privateAVcfIndex,
                 genomeVersion = snpEffGenomeVersion,
                 datadirZip = snpEffDatadirZip,
-                outputPath = prefix + "/" + name1 + ".annotated.vcf",
+                outputPath = outputDir + "/" + name1 + ".annotated.vcf",
                 configOptions = snpEffConfigOptions,
         }
 
@@ -103,7 +93,7 @@ workflow VcfCompare {
                 vcfIndex = intersect.privateBVcfIndex,
                 genomeVersion = snpEffGenomeVersion,
                 datadirZip = snpEffDatadirZip,
-                outputPath = prefix + "/" + name2 + ".annotated.vcf",
+                outputPath = outputDir + "/" + name2 + ".annotated.vcf",
                 configOptions = snpEffConfigOptions,
         }
     }
@@ -121,27 +111,6 @@ workflow VcfCompare {
         Array[File] vennFiles = vennStats.out
         Array[File] annotatedPrivateVcf1 = annotateUnique1.outputVcf
         Array[File] annotatedPrivateVcf2 = annotateUnique2.outputVcf
-    }
-}
-
-task retrieveSamplesFromVcf {
-    input {
-        File vcf
-    }
-
-    command <<<
-        bcftools query --list-samples ~{vcf}
-    >>>
-
-    output {
-        Array[String] samples = read_lines(stdout())
-    }
-
-    runtime {
-        docker: "quay.io/biocontainers/bcftools:1.16--hfe4b78e_1"
-        # 10 minutes should be ample as only the header and the first line are processed.
-        time_minutes: 10
-        memory: "512MiB"
     }
 }
 
