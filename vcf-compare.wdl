@@ -21,6 +21,7 @@ version 1.0
 # SOFTWARE.
 
 import "tasks/bcftools.wdl" as bcftools
+import "tasks/snpeff.wdl" as snpeff
 
 struct CompareUnit {
     File vcf1
@@ -35,6 +36,8 @@ workflow VcfCompare {
     input {
         Array[CompareUnit] units
         String outputDir = "."
+        String snpEffGenomeVersion
+        File snpEffDatadirZip
     }
 
     scatter (unit in units) {
@@ -82,6 +85,24 @@ workflow VcfCompare {
                 nameB = name2,
                 outputPath = prefix + "/venn.txt"
         }
+
+        call snpeff.SnpEff as annotateUnique1 {
+            input:
+                vcf = intersect.privateAVcf,
+                vcfIndex = intersect.privateAVcfIndex,
+                genomeVersion = snpEffGenomeVersion,
+                datadirZip = snpEffDatadirZip,
+                outputPath = prefix + "/" + name1 + ".annotated.vcf",
+        }
+
+        call snpeff.SnpEff as annotateUnique2 {
+            input:
+                vcf = intersect.privateBVcf,
+                vcfIndex = intersect.privateBVcfIndex,
+                genomeVersion = snpEffGenomeVersion,
+                datadirZip = snpEffDatadirZip,
+                outputPath = prefix + "/" + name2 + ".annotated.vcf",
+        }
     }
 
     output {
@@ -95,6 +116,8 @@ workflow VcfCompare {
         Array[File] sharedVcf2Index = intersect.sharedBVcfIndex
         Array[File] bcftoolsIsecReadmes = intersect.readme
         Array[File] vennFiles = vennStats.out
+        Array[File] annotatedPrivateVcf1 = annotateUnique1.outputVcf
+        Array[File] annotatedPrivateVcf2 = annotateUnique2.outputVcf
     }
 }
 
