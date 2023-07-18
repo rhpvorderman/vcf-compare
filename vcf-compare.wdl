@@ -58,12 +58,26 @@ workflow VcfCompare {
                 outputPath = outputDir + "/" + name2 + ".normalized.vcf.gz"
         }
 
+        call bcftools.View as filterHomRefVcf1 {
+            input:
+                inputFile=normalizeVcf1.outputVcf,
+                outputPath = outputDir + "/" + name1 + ".normalized.nohomref.vcf.gz",
+                include="'GT[*]=\"alt\"'"
+        }
+
+        call bcftools.View as filterHomRefVcf2 {
+            input:
+                inputFile=normalizeVcf2.outputVcf,
+                outputPath = outputDir + "/" + name2 + ".normalized.nohomref.vcf.gz",
+                include="'GT[*]=\"alt\"'"
+        }
+
         call bcftools.Isec as intersect {
             input: 
-                aVcf = normalizeVcf1.outputVcf,
-                aVcfIndex = normalizeVcf1.outputVcfIndex,
-                bVcf = normalizeVcf2.outputVcf,
-                bVcfIndex = normalizeVcf2.outputVcfIndex,
+                aVcf = filterHomRefVcf1.outputVcf,
+                aVcfIndex = select_first([filterHomRefVcf1.outputVcfIndex]),
+                bVcf = filterHomRefVcf2.outputVcf,
+                bVcfIndex = select_first([filterHomRefVcf2.outputVcfIndex]),
                 prefix = outputDir + "/" + name1
         }
         
