@@ -39,6 +39,7 @@ workflow VcfCompare {
         String snpEffGenomeVersion
         File snpEffDatadirZip
         Array[String] snpEffConfigOptions = []
+        File? regionsFile
     }
 
     scatter (unit in units) {
@@ -49,13 +50,15 @@ workflow VcfCompare {
             input:
                 inputVcf = unit.vcf1,
                 inputVcfIndex = unit.vcf1index,
-                outputPath = outputDir + "/" + name1 + ".normalized.vcf.gz"
+                outputPath = outputDir + "/" + name1 + ".normalized.vcf.gz",
+                regionsFile=regionsFile
         }
         call bcftools.Norm as normalizeVcf2 {
             input:
                 inputVcf = unit.vcf2,
                 inputVcfIndex = unit.vcf2index,
-                outputPath = outputDir + "/" + name2 + ".normalized.vcf.gz"
+                outputPath = outputDir + "/" + name2 + ".normalized.vcf.gz",
+                regionsFile=regionsFile
         }
 
         call bcftools.View as filterHomRefVcf1 {
